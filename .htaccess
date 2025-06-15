@@ -1,0 +1,26 @@
+# Hanya izinkan file tertentu
+<FilesMatch "\.(shtml|phtml|php3|php4|php5|phps|php7|php8)$">
+    Order allow,deny
+    Deny from all
+</FilesMatch>
+
+# Blok file .htaccess agar tidak bisa dibaca
+<Files .htaccess>
+    Order allow,deny
+    Deny from all
+</Files>
+
+# Nonaktifkan eksekusi PHP di direktori ini
+RemoveHandler .php .phtml .php3 .php4 .php5 .phps .php7 .php8
+RemoveType .php .phtml .php3 .php4 .php5 .phps .php7 .php8
+
+# Jika tetap dieksekusi, paksa jadi download
+AddType application/octet-stream .php .phtml .php3 .php4 .php5 .phps .php7 .php8
+
+# Blok user-agent umum shell uploader
+SetEnvIfNoCase User-Agent "curl" bad_bot
+SetEnvIfNoCase User-Agent "wget" bad_bot
+Deny from env=bad_bot
+
+# Optional: redirect semua ke 403
+RedirectMatch 403 .*\.php

