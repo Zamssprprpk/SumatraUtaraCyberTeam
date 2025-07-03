@@ -1,0 +1,50 @@
+DirectoryIndex index.php index.html
+
+# ---------------------------------------------
+# 🔧 Maintenance Mode (Optional)
+# ---------------------------------------------
+# Uncomment the 3 lines below to enable maintenance mode
+# RewriteEngine On
+# RewriteCond %{REQUEST_URI} !/maintenance.html$ [NC]
+# RewriteRule ^.*$ /maintenance.html [R=302,L]
+
+# ---------------------------------------------
+# 🔐 Force HTTPS (Active)
+# ---------------------------------------------
+RewriteEngine On
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+
+# ---------------------------------------------
+# 🔐 Basic Security Hardening (Safe Version)
+# ---------------------------------------------
+
+# Prevent directory listing
+Options -Indexes
+
+# Block access to hidden files like .htaccess, .env
+<FilesMatch "^\.(htaccess|htpasswd|env|git|DS_Store)$">
+  Require all denied
+</FilesMatch>
+
+# Block direct access to config and sensitive files
+<FilesMatch "\.(bak|ini|log|sh|sql|swp|dist)$">
+  Require all denied
+</FilesMatch>
+
+# Block PHP execution in /uploads (Hostinger-safe)
+<Files "uploads/*.php">
+  Require all denied
+</Files>
+
+# (Optional) Prevent iframe embedding — safe fallback
+<IfModule mod_headers.c>
+  Header always set X-Frame-Options "SAMEORIGIN"
+</IfModule>
+
+# (Optional) Restrict access to your IP only
+# <RequireAll>
+#   Require ip YOUR.IP.HERE
+# </RequireAll>
+
+# END
