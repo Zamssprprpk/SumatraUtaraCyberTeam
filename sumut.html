@@ -181,7 +181,7 @@
         
         <div class="hacker-signature">
             <span class="hacked-by">Hacked By</span>
-            <span class="hacker-name">./ZammLaex M.Kom.</span>
+            <span class="hacker-name">./ZammLaex GrayHat</span>
         </div>
         
         <hr class="divider">
@@ -199,7 +199,7 @@
             </audio>
             
             <p class="palestine-text">
-                ZammSec01 || Sumatra Utafa Cyber Team
+                ZammSec01 || Sumatra Utara Cyber Team
             </p>
         </div>
     </div>
