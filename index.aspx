@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Touch By ZammLaex M.Kom-</title>
+    <title>Touch By ZammLaex GrayHat</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@400;700&display=swap');
         @import url('https://fonts.googleapis.com/css2?family=Waterfall&display=swap');
@@ -199,7 +199,7 @@
             </audio>
             
             <p class="palestine-text">
-                Free Palestine
+                ZammSec01 || Sumatra Utafa Cyber Team
             </p>
         </div>
     </div>
