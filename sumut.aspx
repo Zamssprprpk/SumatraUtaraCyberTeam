@@ -177,7 +177,7 @@
 </head>
 <body>
     <div class="main-container">
-        <img src="https://i.top4top.io/p_34112gtz80.jpg" alt="Logo" class="logo">
+        <img src="https://files.catbox.moe/iy12xi.webp" alt="Logo" class="logo">
         
         <div class="hacker-signature">
             <span class="hacked-by">Hacked By</span>
@@ -188,7 +188,7 @@
         
         <div class="message-container">
             <p class="ambatukam-text">
-                Fanatix Legion
+                Sumatra Utara Cyber Team
             </p>
             <p class="challenge-text">
                 We are Indonesians and Muslims. We stand against oppression, reject the Zionist regime, and resist all who support it. We are the digital lions of justice.
@@ -199,7 +199,7 @@
             </audio>
             
             <p class="palestine-text">
-                Free Palestine
+                ZammSec01 || Sumatra Utafa Cyber Team
             </p>
         </div>
     </div>
