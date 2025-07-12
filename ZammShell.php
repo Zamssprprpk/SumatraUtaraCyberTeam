@@ -210,9 +210,15 @@ foreach (array_merge($dirs, $files) as $f) {
     echo "</td></tr>";
 }
 echo "</table><br>";
-echo "<input type='submit' name='delete' value='Delete Selected' class='btn'> ";
-echo "<input type='submit' name='zip' value='Zip Selected' class='btn'> ";
-echo "Move to: <input name='target' value='$cwd/newfolder' size='20'> <input type='submit' name='move' value='Move' class='btn'>";
+echo "
+<div style='display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:10px;'>
+    <input type='submit' name='delete' value='Delete Selected' class='btn'>
+    <input type='submit' name='zip' value='Zip Selected' class='btn'>
+    <label>Move to:</label>
+    <input name='target' value='$cwd/newfolder' size='20' style='flex:1;max-width:200px;'>
+    <input type='submit' name='move' value='Move' class='btn'>
+</div>
+";
 echo "</form><hr>";
 
 echo "<div class='grid2'>
